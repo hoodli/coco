@@ -100,6 +100,12 @@
   .song-tools span{font-size:12px;color:var(--muted);line-height:1.5}
   .song-tools button{border:0;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:800;color:var(--accent);background:#f4f1ff;cursor:pointer;white-space:nowrap}
   .song .lyric{border:0;background:#fff1f5;color:#ff7aa8;border-radius:12px;padding:8px 10px;font-size:16px;cursor:pointer}
+  .sc-box{margin-top:12px;background:#fff;border-radius:16px;padding:12px;box-shadow:var(--shadow)}
+  .sc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .sc-head b{font-size:13px}
+  .sc-head button{border:0;background:#f4f1ff;color:#9a94ac;border-radius:50%;width:28px;height:28px;font-size:16px;cursor:pointer}
+  .sc-box .hint{margin:8px 0 0;text-align:left}
+  .sc-box .hint a{color:var(--accent);font-weight:700}
 
   /* 奖励商店 */
   .shop-hero{background:linear-gradient(135deg,#ffc44d,#ff9f2e);color:#fff;border-radius:22px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
@@ -248,7 +254,7 @@ var WORDS=[
   {w:'bird',z:'小鸟',e:'🐦'},{w:'car',z:'汽车',e:'🚗'},{w:'ball',z:'球',e:'⚽'},{w:'milk',z:'牛奶',e:'🥛'}
 ];
 var SONGS=[
-  {n:'Head Shoulders Knees Toes',e:'🎵',src:'audio/headshoulders.mp3'},
+  {n:'Head Shoulders Knees Toes',e:'🎵',src:'audio/headshoulders.mp3',sc:'https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F139545188&show_artwork=true&auto_play=true'},
   {n:'Twinkle Twinkle Little Star',e:'🌟',src:'audio/twinkle.mp3'},
   {n:'Old MacDonald Had a Farm',e:'🐄',src:'audio/oldmac.mp3'},
   {n:'The Wheels on the Bus',e:'🚌',src:'audio/wheels.mp3'},
@@ -426,14 +432,16 @@ function learnPage(){
   var back='<div class="learn-head"><button class="back" onclick="goHome()">← 返回</button><h2>'+t.icon+' '+t.title+'</h2></div>';
   var body='';
   if(viewTask==='song'){
-    body='<div class="song-tools"><span>点一下听真人演唱，再点一次停止；🔊 可听英文歌词</span>'+
+    body='<div class="song-tools"><span>点一下听演唱；Head Shoulders 使用 SoundCloud 播放</span>'+
       '<button onclick="stopSong()">⏹ 停止</button></div>'+
       '<div class="songs">'+SONGS.map(function(s,i){
-        return '<div class="song" onclick="playSong(this,'+i+')"><span class="sn">'+s.e+'</span>'+
-          '<div class="si"><b>'+esc(s.n)+'</b><span>点一下听演唱</span></div>'+
+        var fn=s.sc?'playSongSC':'playSong';
+        var tip=s.sc?'点一下在 SoundCloud 播放':'点一下听演唱';
+        return '<div class="song" onclick="'+fn+'(this,'+i+')"><span class="sn">'+s.e+'</span>'+
+          '<div class="si"><b>'+esc(s.n)+'</b><span>'+tip+'</span></div>'+
           '<button class="lyric" title="听英文歌词" onclick="event.stopPropagation();speak(LYRICS['+i+'],\'en-US\')">🔊</button>'+
           '<span class="play">▶️</span></div>';
-      }).join('')+'</div>';
+      }).join('')+'</div><div id="scBox" class="sc-box" style="display:none"></div>';
   } else if(viewTask==='hanzi'){
     body='<div class="grid-items">'+HANZI.map(function(h){
       return '<div class="item" onclick="sayItem(this,\''+h.c+'\',\'zh-CN\')"><div class="glyph">'+h.c+'</div><div class="lbl">'+h.p+'</div></div>';
@@ -567,6 +575,7 @@ function stopSong(){
   songOscs.forEach(function(o){try{o.stop()}catch(e){}});songOscs=[];
   if(songTimer){clearTimeout(songTimer);songTimer=null}
   songPlaying=-1;audioFallbackDone=false;
+  var scBox=document.getElementById('scBox');if(scBox){scBox.innerHTML='';scBox.style.display='none'}
   var list=document.querySelectorAll?document.querySelectorAll('.song'):[];
   for(var i=0;i<list.length;i++)list[i].classList.remove('playing');
 }
@@ -616,6 +625,22 @@ function playSong(el,i){
   if(m){playMelody(i,m);toast('🎵 正在播放旋律：'+s.n)}
   else{speak(s.n,'en-US');toast('此设备暂不支持播放，已改为朗读')}
 }
+function playSongSC(el,i){
+  var s=SONGS[i];if(!s||!s.sc)return;
+  var box=document.getElementById('scBox');
+  if(songPlaying===i&&box&&box.style.display==='block'){stopSong();toast('已停止');return}
+  stopSong();
+  markSong(el,i);
+  if(!box)return;
+  var u=s.sc+(s.sc.indexOf('auto_play=')>=0?'':'&auto_play=true');
+  box.innerHTML='<div class="sc-head"><b>🎵 '+esc(s.n)+'</b><button onclick="closeSoundCloud()">×</button></div>'+
+    '<iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay; encrypted-media" src="'+u.replace(/&/g,'&amp;')+'"></iframe>'+
+    '<p class="hint">如果这个播放器打不开，<a href="javascript:;" onclick="playSong(null,'+i+')">点这里用本地音频播放</a>。</p>';
+  box.style.display='block';
+  if(box.scrollIntoView)box.scrollIntoView({behavior:'smooth',block:'center'});
+  toast('🎵 正在打开 SoundCloud 播放');
+}
+function closeSoundCloud(){stopSong()}
 
 function checkin(){
   if(D.checkinDays.indexOf(todayStr)>=0)return;
