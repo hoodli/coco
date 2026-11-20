@@ -260,10 +260,12 @@ var WORDS=[
   {w:'bird',z:'小鸟',e:'🐦'},{w:'car',z:'汽车',e:'🚗'},{w:'ball',z:'球',e:'⚽'},{w:'milk',z:'牛奶',e:'🥛'}
 ];
 var SONGS=[
-  {n:'Head Shoulders Knees Toes',e:'🎵',icon:'img/noodle-icon.png',src:'audio/headshoulders.m4a',video:'video/headshoulders.mp4'}
+  {n:'Head Shoulders Knees Toes',e:'🎵',icon:'img/noodle-icon.png',src:'audio/headshoulders.m4a',video:'video/headshoulders.mp4'},
+  {n:'One Little Finger',e:'☝️',icon:'img/one-little-finger-icon.png',video:'video/one-little-finger.mp4'}
 ];
 var LYRICS=[
-  'Head, shoulders, knees and toes, knees and toes.'
+  'Head, shoulders, knees and toes, knees and toes.',
+  'One little finger, one little finger, one little finger. Tap tap tap.'
 ];
 /* 内置旋律：不依赖网络，点击即用设备扬声器播放 */
 var MELODIES={
@@ -275,7 +277,12 @@ var MELODIES={
     'E4:1 D4:1 C4:1 E4:1 G4:2 '+
     'C5:1 D5:1 C5:1 B4:1 C5:1 A4:2 '+
     'B4:2 B4:1 G4:1 A4:1 B4:1 C5:2 '+
-    'C4:2 C4:1 C4:1'}
+    'C4:2 C4:1 C4:1'},
+  'One Little Finger':{bpm:100,notes:
+    'C4:1 C4:1 F4:1 F4:1 A4:1 A4:1 F4:2 '+
+    'C4:1 C4:1 F4:1 F4:1 G4:1 G4:1 C4:2 '+
+    'C4:1 C4:1 F4:1 F4:1 A4:1 A4:1 F4:2 '+
+    'C4:1 C4:1 F4:1 F4:1 G4:1 G4:1 C4:2'}
 };
 var NOTE_NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 var NOTE_FREQ=(function(){var m={};for(var o=1;o<=7;o++){for(var i=0;i<12;i++){m[NOTE_NAMES[i]+o]=440*Math.pow(2,((o-4)*12+i-9)/12)}}return m})();
@@ -473,7 +480,7 @@ function parentPage(){
         '<button class="fab" onclick="document.getElementById(\'fileIn\').click()">⬆ 导入数据</button></div>'+
       '<button class="fab" style="color:#e0607e;border-color:#f5c9d4;background:#fff6f8" onclick="resetAll()">重置全部数据</button></div>'+
     '<p class="hint">数据保存在本浏览器。换设备或清理前请先导出备份。</p>'+
-    '<p class="hint">儿歌来源：Head Shoulders Knees And Toes 由 Noodle & Pals 演绎（B 站 UP 主 LakeTiantian 搬运），仅个人家庭学习使用。</p>';
+    '<p class="hint">儿歌来源：Head Shoulders Knees And Toes、One Little Finger 均为 Super Simple Songs 作品（B 站 UP 主 LakeTiantian 搬运），仅个人家庭学习使用。</p>';
 }
 
 function renderNav(){
