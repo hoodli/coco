@@ -259,7 +259,7 @@ var WORDS=[
   {w:'bird',z:'小鸟',e:'🐦'},{w:'car',z:'汽车',e:'🚗'},{w:'ball',z:'球',e:'⚽'},{w:'milk',z:'牛奶',e:'🥛'}
 ];
 var SONGS=[
-  {n:'Head Shoulders Knees Toes',e:'🎵',src:'audio/headshoulders.m4a',bvid:'BV1ymEJ62Ezx'}
+  {n:'Head Shoulders Knees Toes',e:'🎵',src:'audio/headshoulders.m4a',video:'video/headshoulders.mp4'}
 ];
 var LYRICS=[
   'Head, shoulders, knees and toes, knees and toes.'
@@ -402,9 +402,9 @@ function learnPage(){
       '<button onclick="stopAllSongs()">⏹ 停止</button></div>'+
       '<div class="songs">'+SONGS.map(function(s,i){
         return '<div class="song" onclick="playSong(this,'+i+')"><span class="sn">'+s.e+'</span>'+
-          '<div class="si"><b>'+esc(s.n)+(s.bvid?'<span class="video-tag">在线视频</span>':'')+'</b><span>'+(s.bvid?'点一下看视频':'点一下听演唱')+'</span></div>'+
+          '<div class="si"><b>'+esc(s.n)+(s.video?'<span class="video-tag">视频</span>':'')+'</b><span>'+(s.video?'点一下看视频':'点一下听演唱')+'</span></div>'+
           '<button class="lyric" title="听英文歌词" onclick="event.stopPropagation();speak(LYRICS['+i+'],\'en-US\')">🔊</button>'+
-          '<span class="play">'+(s.bvid?'📺':'▶️')+'</span></div>';
+          '<span class="play">'+(s.video?'📺':'▶️')+'</span></div>';
       }).join('')+'</div>';
   } else if(viewTask==='hanzi'){
     body='<div class="grid-items">'+HANZI.map(function(h){
@@ -471,7 +471,7 @@ function parentPage(){
         '<button class="fab" onclick="document.getElementById(\'fileIn\').click()">⬆ 导入数据</button></div>'+
       '<button class="fab" style="color:#e0607e;border-color:#f5c9d4;background:#fff6f8" onclick="resetAll()">重置全部数据</button></div>'+
     '<p class="hint">数据保存在本浏览器。换设备或清理前请先导出备份。</p>'+
-    '<p class="hint">儿歌来源：Head Shoulders Knees And Toes 由 Noodle & Pals 演绎，视频来自 B 站（UP 主 LakeTiantian），仅个人家庭学习使用。</p>';
+    '<p class="hint">儿歌来源：Head Shoulders Knees And Toes 由 Noodle & Pals 演绎（B 站 UP 主 LakeTiantian 搬运），仅个人家庭学习使用。</p>';
 }
 
 function renderNav(){
@@ -563,22 +563,23 @@ function playMelody(i,m){
   });
   songTimer=setTimeout(stopSong,(beat+0.4)*1000);
 }
-/* B站在线视频：第一首歌用官方 iframe 播放器在线播放 */
+/* 本地视频播放：第一首歌用仓库内的 mp4 直接播放，不依赖第三方嵌入 */
 function openSongVideo(el,i){
-  var s=SONGS[i];if(!s||!s.bvid)return false;
+  var s=SONGS[i];if(!s||!s.video)return false;
   closeSongVideo(false);
   markSong(el,i);
   var mask=document.createElement('div');
   mask.className='video-mask';mask.id='songVideoMask';
   mask.innerHTML='<div class="video-box">'+
     '<div class="video-bar"><b>📺 '+esc(s.n)+'</b><button onclick="closeSongVideo()">✕ 关闭</button></div>'+
-    '<div class="video-frame"><iframe src="https://player.bilibili.com/player.html?bvid='+encodeURIComponent(s.bvid)+'&page=1&high_quality=1&danmaku=0" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; fullscreen; picture-in-picture"></iframe></div>'+
-    '<div class="video-foot"><span>视频来自 B 站，需要联网。若加载不出来，可点下方用本地音频播放。</span>'+
+    '<div class="video-frame"><video id="songVideoEl" src="'+esc(s.video)+'" controls autoplay playsinline webkit-playsinline preload="auto" style="position:absolute;top:0;left:0;width:100%;height:100%;background:#000"></video></div>'+
+    '<div class="video-foot"><span>视频直接播放，无需联网。若无法播放，可点下方用本地音频。</span>'+
     '<button onclick="closeSongVideo(false);playLocalAudio('+i+')">🎵 改用本地音频</button></div>'+
     '</div>';
   mask.addEventListener('click',function(e){if(e.target===mask)closeSongVideo()});
   document.body.appendChild(mask);
-  toast('📺 正在打开在线视频：'+s.n);
+  var v=document.getElementById('songVideoEl');
+  if(v){var p=v.play();if(p&&p.catch)p.catch(function(){})}
   return true;
 }
 function closeSongVideo(showToast){
@@ -618,7 +619,7 @@ function playSong(el,i){
   var s=SONGS[i];if(!s)return;
   if(songPlaying===i){stopAllSongs();return}
   stopAllSongs();
-  if(s.bvid&&openSongVideo(el,i))return;
+  if(s.video&&openSongVideo(el,i))return;
   markSong(el,i);
   audioFallbackDone=false;
   var m=MELODIES[s.n];
