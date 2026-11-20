@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>宝宝学习工作台</title>
+<style>
+  :root{
+    --card:#fff; --ink:#3a3450; --muted:#9a94ac; --line:#f0eef8;
+    --accent:#7b6cff; --star:#ffb02e; --ok:#4ecb8f; --pink:#ff7aa8;
+    --shadow:0 8px 24px rgba(120,100,190,.12); --r:22px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:linear-gradient(165deg,#fff6e8 0%,#ffeff5 40%,#eef6ff 100%);
+    color:var(--ink);min-height:100vh;padding-bottom:96px;
+  }
+  .app{max-width:560px;margin:0 auto;padding:16px 14px 28px}
+
+  /* 顶部 */
+  .hero{background:linear-gradient(135deg,#ffb26b,#ff85a8);border-radius:26px;padding:18px;color:#fff;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .hero:after{content:"";position:absolute;right:-24px;bottom:-40px;width:130px;height:130px;background:rgba(255,255,255,.13);border-radius:50%}
+  .hero-top{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
+  .baby-avatar{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.28);border:3px solid rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;font-size:32px}
+  .hero-info h1{font-size:20px;margin:0;font-weight:800}
+  .hero-info p{margin:3px 0 0;font-size:12px;opacity:.9}
+  .hero-stats{display:flex;gap:9px;margin-top:14px;position:relative;z-index:1}
+  .hs{flex:1;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.3);border-radius:15px;padding:9px;text-align:center}
+  .hs b{display:block;font-size:20px;line-height:1.1}
+  .hs span{font-size:11px;opacity:.92}
+  .quit{position:absolute;top:14px;right:14px;z-index:2;border:0;background:rgba(255,255,255,.25);color:#fff;border-radius:12px;padding:6px 11px;font-size:11px;cursor:pointer}
+
+  .tipbar{margin-top:12px;background:#fffdf6;border:1.5px dashed #ffd79a;border-radius:16px;padding:11px 14px;font-size:13px;color:#a9762e;display:flex;gap:8px;align-items:center}
+  .tipbar .hand{font-size:20px}
+
+  .sec{margin:20px 2px 10px;display:flex;align-items:center;justify-content:space-between}
+  .sec h2{font-size:16px;margin:0;font-weight:800}
+  .sec small{font-size:12px;color:var(--muted)}
+
+  /* 任务大卡片 */
+  .tasks{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .tcard{border-radius:24px;padding:18px 14px 16px;text-align:center;cursor:pointer;transition:.15s;position:relative;overflow:hidden;border:3px solid transparent;box-shadow:var(--shadow)}
+  .tcard:active{transform:scale(.95)}
+  .tcard.done{border-color:var(--ok)}
+  .tcard .big{font-size:52px;line-height:1;filter:drop-shadow(0 4px 6px rgba(0,0,0,.08))}
+  .tcard h3{font-size:15px;margin:10px 0 3px;font-weight:800;color:var(--ink)}
+  .tcard p{font-size:11px;margin:0;color:#8a849c}
+  .tcard .check{position:absolute;top:9px;right:9px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.75);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff}
+  .tcard.done .check{background:var(--ok)}
+  .tcard .rb{margin-top:10px;display:inline-block;background:rgba(255,255,255,.8);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:800;color:#d98b1f}
+  .tcard.done .rb{background:var(--ok);color:#fff}
+  .c1{background:#fff0d9}.c2{background:#ffe6ef}.c3{background:#e3f0ff}.c4{background:#e9f8ef}.c5{background:#f0e9ff}
+
+  /* 小红花进度 */
+  .starbar{background:#fff;border-radius:20px;padding:15px;box-shadow:var(--shadow);margin-top:14px}
+  .starbar .row{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+  .starbar .row b{font-size:14px}
+  .starbar .row span{font-size:12px;color:var(--muted)}
+  .flower-track{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin:10px 0 6px}
+  .fl{font-size:30px;line-height:1;transition:.2s;display:inline-block}
+  .fl.on{filter:none}
+  .fl.off{filter:grayscale(1);opacity:.2}
+  .star-goal{font-size:11px;color:var(--muted);margin-top:7px;text-align:center}
+
+  /* 学习内容记录 */
+  .journal .row{display:flex;gap:8px;align-items:center}
+  .journal input{flex:1;min-width:0;border:1.5px solid #e3e6f2;border-radius:13px;padding:11px 13px;font-size:13px;outline:none}
+  .journal input:focus{border-color:var(--accent)}
+  .journal .add{border:0;border-radius:13px;padding:11px 16px;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,#7b6cff,#9c8bff);cursor:pointer;white-space:nowrap}
+  .jitem{display:flex;align-items:flex-start;gap:9px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .jitem:last-child{border-bottom:0}
+  .jitem .dot{width:8px;height:8px;border-radius:50%;background:#ffb02e;flex:0 0 auto;margin-top:6px}
+  .jitem .txt{flex:1;font-size:13px;line-height:1.5;word-break:break-word}
+  .jitem .tm{font-size:11px;color:var(--muted);margin-top:2px}
+  .jitem .del{border:0;background:transparent;color:#c9c4d6;font-size:17px;cursor:pointer;line-height:1}
+
+  /* 内容学习区 */
+  .learn-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .back{border:0;background:#fff;border-radius:14px;padding:9px 14px;font-size:14px;font-weight:700;color:var(--accent);box-shadow:var(--shadow);cursor:pointer}
+  .learn-head h2{font-size:18px;margin:0;font-weight:800}
+  .grid-items{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .item{background:#fff;border-radius:18px;padding:14px 8px;text-align:center;cursor:pointer;box-shadow:var(--shadow);transition:.12s;border:2px solid transparent}
+  .item:active{transform:scale(.9)}
+  .item.speaking{border-color:var(--accent);background:#f4f1ff}
+  .item .glyph{font-size:36px;line-height:1.1;font-weight:800;color:var(--ink)}
+  .item .lbl{font-size:12px;color:var(--muted);margin-top:6px}
+  .item .emo{font-size:38px;line-height:1.1}
+  .hint{font-size:12px;color:var(--muted);text-align:center;line-height:1.7;margin:14px 4px}
+  .songs{display:flex;flex-direction:column;gap:10px}
+  .song{background:#fff;border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);cursor:pointer}
+  .song .sn{font-size:30px}
+  .song .si{flex:1}
+  .song .si b{font-size:14px;display:block}
+  .song .si span{font-size:11px;color:var(--muted)}
+  .song .play{font-size:20px}
+
+  /* 奖励商店 */
+  .shop-hero{background:linear-gradient(135deg,#ffc44d,#ff9f2e);color:#fff;border-radius:22px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+  .shop-hero b{font-size:34px;display:block}
+  .shop-hero span{font-size:12px;opacity:.92}
+  .wish{background:#fff;border-radius:18px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;box-shadow:var(--shadow)}
+  .wish .wi{font-size:34px;background:#fff1f5;border-radius:14px;padding:8px 12px}
+  .wish .info{flex:1}
+  .wish .info b{font-size:14px;display:block}
+  .wish .info span{font-size:12px;color:var(--muted)}
+  .wish button{border:0;border-radius:14px;padding:10px 14px;font-size:13px;font-weight:800;cursor:pointer;background:#f4f1ff;color:var(--accent)}
+  .wish button.can{background:linear-gradient(135deg,#7b6cff,#9c8bff);color:#fff}
+  .wish button:disabled{opacity:.5}
+
+  /* 数据 */
+  .ov{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+  .ov .box{background:#fff;border-radius:18px;padding:16px 8px;text-align:center;box-shadow:var(--shadow)}
+  .ov .box b{display:block;font-size:24px;color:var(--accent)}
+  .ov .box span{font-size:11px;color:var(--muted)}
+  .card{background:#fff;border-radius:20px;padding:15px;box-shadow:var(--shadow);margin-bottom:12px}
+  .card h3{font-size:14px;margin:0 0 10px}
+  .fab{width:100%;border:1.5px dashed #cfc9e8;background:#faf9ff;color:var(--accent);border-radius:14px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;margin-top:6px}
+  .pinfield{margin-bottom:12px}
+  .pinfield label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px}
+  .pinrow{display:flex;gap:8px}
+  .pinrow input{flex:1;min-width:0;border:1.5px solid #e3e6f2;border-radius:12px;padding:10px 12px;font-size:14px;outline:none}
+  .pinrow button{border:0;border-radius:12px;padding:10px 16px;font-size:13px;font-weight:700;color:#fff;background:var(--accent);cursor:pointer}
+  .log{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .log:last-child{border-bottom:0}
+
+  /* 底部导航 */
+  .nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.97);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:30;box-shadow:0 -4px 18px rgba(120,100,190,.08)}
+  .nav button{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--muted);cursor:pointer;width:20%}
+  .nav button .ni{font-size:26px;line-height:1;filter:grayscale(.5);opacity:.55;transition:.15s}
+  .nav button.on{color:var(--accent);font-weight:800}
+  .nav button.on .ni{filter:none;opacity:1;transform:translateY(-2px)}
+
+  .toast{position:fixed;left:50%;top:20%;transform:translateX(-50%) scale(.9);background:rgba(58,52,80,.94);color:#fff;padding:14px 24px;border-radius:24px;font-size:16px;font-weight:700;opacity:0;pointer-events:none;transition:.25s;z-index:60;white-space:nowrap}
+  .toast.show{opacity:1;transform:translateX(-50%) scale(1)}
+
+  /* 撒花 */
+  .confetti{position:fixed;inset:0;pointer-events:none;z-index:55;overflow:hidden}
+  .cf{position:absolute;top:-20px;font-size:26px;animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.2}}
+
+  /* 登录 */
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .login-card{background:#fff;border-radius:26px;padding:30px 22px;width:100%;max-width:400px;box-shadow:0 12px 44px rgba(120,100,190,.18);text-align:center}
+  .login-logo{font-size:60px}
+  .login-card h1{font-size:22px;margin:8px 0 4px;font-weight:800}
+  .login-card .desc{font-size:13px;color:var(--muted);margin:0 0 24px}
+  .login-btn{width:100%;border:0;border-radius:16px;padding:15px;font-size:16px;font-weight:800;color:#fff;background:linear-gradient(135deg,#ffb26b,#ff85a8);cursor:pointer;margin-top:12px}
+  .login-btn.parent{background:linear-gradient(135deg,#7b6cff,#9c8bff)}
+  .login-err{color:#e0607e;font-size:12px;min-height:16px;margin-top:8px}
+  .pin-in{width:100%;border:1.5px solid #e3e6f2;border-radius:14px;padding:13px;text-align:center;font-size:20px;letter-spacing:8px;outline:none}
+  .login-tip{font-size:11px;color:var(--muted);line-height:1.7;margin-top:18px}
+
+  /* 日报弹层 */
+  .modal-mask{position:fixed;inset:0;background:rgba(40,30,60,.55);z-index:80;display:flex;align-items:flex-end;justify-content:center}
+  .modal{width:100%;max-width:520px;max-height:92vh;background:#fff;border-radius:22px 22px 0 0;overflow-y:auto;padding:18px 16px calc(20px + env(safe-area-inset-bottom))}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .modal-head h2{font-size:16px;margin:0;font-weight:800}
+  .modal-head .x{border:0;background:#f4f1ff;color:#9a94ac;border-radius:50%;width:30px;height:30px;font-size:18px;cursor:pointer;line-height:1}
+  .modal-actions{display:flex;gap:9px;margin-top:13px}
+  .modal-actions button{flex:1;border:0;border-radius:14px;padding:12px;font-size:13px;font-weight:800;cursor:pointer}
+  .btn-send{background:linear-gradient(135deg,#7b6cff,#9c8bff);color:#fff}
+  .btn-save{background:linear-gradient(135deg,#4ecb8f,#38b87b);color:#fff}
+  .page{animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="toast" id="toast"></div>
+<div class="nav" id="nav"></div>
+<input type="file" id="fileIn" accept="application/json" style="display:none">
+<script>
+/* ============ 数据 ============ */
+var KEY='baby_study_desk_v1';
+var todayStr=(function(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')})();
+var ROLE_KEY='baby_desk_role_v1';
+var role=sessionStorage.getItem(ROLE_KEY)||'';
+var loginRole='baby';
+
+function defaultData(){
+  return {
+    name:'CoCo', avatar:'🐣', lastOpen:todayStr,
+    stars:0, totalStars:0, todayStars:0, streak:0, lastCheckin:'', checkinDays:[],
+    auth:{parentPin:'8899'},
+    tasks:{
+      song:{title:'听英文儿歌',icon:'🎵',color:'c1',star:1,done:false},
+      hanzi:{title:'认识中文字',icon:'🈶',color:'c2',star:1,done:false},
+      number:{title:'学习数字',icon:'🔢',color:'c3',star:1,done:false},
+      word:{title:'学习单词',icon:'🔤',color:'c4',star:1,done:false},
+      workbook:{title:'全脑练习册',icon:'🧠',color:'c5',star:1,done:false}
+    },
+    wishes:[
+      {id:'w1',title:'看一集动画片',cost:10},
+      {id:'w2',title:'去公园玩',cost:20},
+      {id:'w3',title:'买一本绘本',cost:30}
+    ],
+    history:{},
+    journals:{}
+  };
+}
+var D;
+function load(){
+  try{var raw=localStorage.getItem(KEY);D=raw?JSON.parse(raw):defaultData()}catch(e){D=defaultData()}
+  if(!D.tasks||!D.wishes)D=defaultData();
+  if(!D.auth)D.auth={parentPin:'8899'};
+  if(!D.checkinDays)D.checkinDays=[];
+  if(!D.history)D.history={};
+  if(!D.journals)D.journals={};
+  if(!D.lastCheckin)D.lastCheckin='';
+  if(D.name==='宝宝')D.name='CoCo';   // 旧数据迁移：默认名升级为 CoCo
+  rollover();save();
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){toast('存储空间不足')}}
+function rollover(){
+  if(D.lastOpen!==todayStr){
+    var c=0,t=0;
+    for(var k in D.tasks){t++;if(D.tasks[k].done)c++}
+    D.history[D.lastOpen]={done:c,total:t,stars:D.todayStars||0};
+    for(var k2 in D.tasks){D.tasks[k2].done=false}
+    D.todayStars=0;D.lastOpen=todayStr;
+  }
+  if(D.todayStars===undefined)D.todayStars=0;
+}
+function taskKeys(){return ['song','hanzi','number','word','workbook']}
+function doneCount(){var c=0,n=0;taskKeys().forEach(function(k){n++;if(D.tasks[k].done)c++});return{done:c,total:n}}
+
+/* ============ 学习内容 ============ */
+var HANZI=[
+  {c:'人',p:'rén'},{c:'口',p:'kǒu'},{c:'手',p:'shǒu'},{c:'眼',p:'yǎn'},
+  {c:'日',p:'rì'},{c:'月',p:'yuè'},{c:'水',p:'shuǐ'},{c:'火',p:'huǒ'},
+  {c:'山',p:'shān'},{c:'大',p:'dà'},{c:'小',p:'xiǎo'},{c:'妈',p:'mā'}
+];
+var NUMBERS=[
+  {n:'1',p:'一',e:'one'},{n:'2',p:'二',e:'two'},{n:'3',p:'三',e:'three'},{n:'4',p:'四',e:'four'},
+  {n:'5',p:'五',e:'five'},{n:'6',p:'六',e:'six'},{n:'7',p:'七',e:'seven'},{n:'8',p:'八',e:'eight'},
+  {n:'9',p:'九',e:'nine'},{n:'10',p:'十',e:'ten'}
+];
+var WORDS=[
+  {w:'apple',z:'苹果',e:'🍎'},{w:'banana',z:'香蕉',e:'🍌'},{w:'cat',z:'小猫',e:'🐱'},{w:'dog',z:'小狗',e:'🐶'},
+  {w:'egg',z:'鸡蛋',e:'🥚'},{w:'fish',z:'鱼',e:'🐟'},{w:'sun',z:'太阳',e:'☀️'},{w:'moon',z:'月亮',e:'🌙'},
+  {w:'bird',z:'小鸟',e:'🐦'},{w:'car',z:'汽车',e:'🚗'},{w:'ball',z:'球',e:'⚽'},{w:'milk',z:'牛奶',e:'🥛'}
+];
+var SONGS=[
+  {n:'Head Shoulders Knees Toes',e:'🎵'},{n:'Twinkle Twinkle Little Star',e:'🌟'},
+  {n:'Old MacDonald Had a Farm',e:'🐄'},{n:'The Wheels on the Bus',e:'🚌'},
+  {n:'If You Are Happy',e:'😊'},{n:'Baby Shark',e:'🦈'}
+];
+
+/* ============ 语音 ============ */
+function speak(text,lang){
+  try{
+    if(!('speechSynthesis' in window)){toast('此设备不支持朗读');return}
+    window.speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(text);
+    u.lang=lang||'zh-CN';u.rate=.85;u.pitch=1.15;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+function cheer(){speak(['真棒！','太厉害啦！','CoCo好聪明！','做得好！'][Math.floor(Math.random()*4)],'zh-CN')}
+
+/* ============ 视图 ============ */
+var view='home';
+var app=document.getElementById('app');
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+
+function loginHTML(){
+  return '<div class="login-wrap"><div class="login-card">'+
+    '<div class="login-logo">🐣</div><h1>宝宝学习工作台</h1>'+
+    '<p class="desc">每天玩一玩，聪明又快乐</p>'+
+    '<button class="login-btn" onclick="enterBaby()">👶 宝宝进入</button>'+
+    '<div style="margin-top:22px;padding-top:18px;border-top:1px solid #f0eef8">'+
+      '<div style="font-size:13px;color:#9a94ac;margin-bottom:10px">家长管理入口</div>'+
+      '<input id="pinIn" class="pin-in" type="password" inputmode="numeric" maxlength="8" placeholder="••••" onkeydown="if(event.key===\'Enter\')enterParent()">'+
+      '<div id="loginErr" class="login-err"></div>'+
+      '<button class="login-btn parent" onclick="enterParent()">👨‍👩‍👧 家长进入</button>'+
+    '</div>'+
+    '<p class="login-tip">初始家长口令 8899，进入后可修改</p>'+
+  '</div></div>';
+}
+
+function render(){
+  if(!role){app.innerHTML=loginHTML();document.getElementById('nav').style.display='none';return}
+  document.getElementById('nav').style.display='';
+  var html='';
+  if(view==='home')html=homePage();
+  else if(view==='star')html=starPage();
+  else if(view==='parent')html=parentPage();
+  else if(view==='learn')html=learnPage();
+  app.innerHTML='<div class="page">'+html+'</div>';
+  renderNav();
+}
+
+function heroHTML(){
+  var d=new Date();var wk=['日','一','二','三','四','五','六'][d.getDay()];
+  return '<div class="hero">'+
+    '<button class="quit" onclick="doLogout()">🚪 退出</button>'+
+    '<div class="hero-top"><div class="baby-avatar">'+D.avatar+'</div>'+
+      '<div class="hero-info"><h1>'+esc(D.name)+'，早上好！</h1><p>'+(d.getMonth()+1)+'月'+d.getDate()+'日 · 星期'+wk+'</p></div></div>'+
+    '<div class="hero-stats">'+
+      '<div class="hs"><b>🌺'+D.stars+'</b><span>小红花</span></div>'+
+      '<div class="hs"><b>🔥'+D.streak+'</b><span>连续打卡</span></div>'+
+      '<div class="hs"><b>🎯'+doneCount().done+'/5</b><span>今日完成</span></div>'+
+    '</div></div>'+
+    '<div class="tipbar"><span class="hand">👋</span><span>点一点下面的卡片完成任务，就能得到小红花啦！</span></div>'+
+    (D.checkinDays.indexOf(todayStr)>=0
+      ?'<div style="margin-top:10px;background:#eafaf3;border-radius:16px;padding:12px 15px;color:#2fa97a;font-size:14px;font-weight:700;text-align:center">✓ 今天已打卡，连续 '+D.streak+' 天啦！</div>'
+      :'<button class="login-btn" style="margin-top:10px;background:linear-gradient(135deg,#ffc44d,#ff9f2e)" onclick="checkin()">🔥 今日打卡 +1 🌺</button>');
+}
+
+function homePage(){
+  var cards='';
+  var colors={song:'c1',hanzi:'c2',number:'c3',word:'c4',workbook:'c5'};
+  taskKeys().forEach(function(k){
+    var t=D.tasks[k];
+    cards+='<div class="tcard '+(t.done?'done':'')+' '+colors[k]+'" onclick="openTask(\''+k+'\')">'+
+      (t.done?'<div class="check">✓</div>':'')+
+      '<div class="big">'+t.icon+'</div><h3>'+t.title+'</h3>'+
+      '<p>'+(t.done?'今天完成啦':'点我来完成')+'</p>'+
+      '<span class="rb">'+(t.done?'🌺 已得':'🌺 +'+t.star)+'</span></div>';
+  });
+  var cnt=doneCount();
+  var pct=cnt.total?Math.round(cnt.done/cnt.total*100):0;
+  var nextGoal=10-(D.stars%10);
+  var have=D.stars%10;
+  var flowers='';
+  for(var i=0;i<10;i++){flowers+='<span class="fl '+(i<have?'on':'off')+'">🌺</span>'}
+  return heroHTML()+
+    '<div class="sec"><h2>今天做什么</h2><small>已完成 '+cnt.done+'/5</small></div>'+
+    '<div class="tasks">'+cards+'</div>'+
+    '<div class="starbar"><div class="row"><b>🌺 攒小红花</b><span>再得 '+nextGoal+' 朵可兑换礼物</span></div>'+
+      '<div class="flower-track">'+flowers+'</div>'+
+      '<div class="star-goal">当前 '+D.stars+' 朵 · 累计获得 '+D.totalStars+' 朵 · 今日 +'+D.todayStars+' 朵</div></div>'+
+    journalHTML();
+}
+
+function journalHTML(){
+  var list=(D.journals[todayStr]||[]);
+  var items=list.map(function(j){
+    return '<div class="jitem"><span class="dot"></span><div class="txt">'+esc(j.text)+
+      '<div class="tm">'+esc(j.time||'')+'</div></div>'+
+      '<button class="del" onclick="delJournal(\''+j.id+'\')" title="删除">×</button></div>';
+  }).join('');
+  return '<div class="sec"><h2>📝 今天学了什么</h2><small>手动记录</small></div>'+
+    '<div class="card journal">'+
+      '<div class="row"><input id="journalInput" type="text" maxlength="80" placeholder="例如：认识了苹果、香蕉" onkeydown="if(event.key===\'Enter\')addJournal()">'+
+      '<button class="add" onclick="addJournal()">＋ 记录</button></div>'+
+      (items?'<div style="margin-top:8px">'+items+'</div>':'<p class="hint" style="margin:12px 0 2px">还没有记录，学了新的内容就写下来吧～</p>')+
+    '</div>';
+}
+
+function learnPage(){
+  var t=D.tasks[viewTask];
+  var back='<div class="learn-head"><button class="back" onclick="goHome()">← 返回</button><h2>'+t.icon+' '+t.title+'</h2></div>';
+  var body='';
+  if(viewTask==='song'){
+    body='<div class="songs">'+SONGS.map(function(s){
+      return '<div class="song" onclick="playSong(\''+esc(s.n)+'\')"><span class="sn">'+s.e+'</span>'+
+        '<div class="si"><b>'+esc(s.n)+'</b><span>点一下听一听</span></div><span class="play">▶️</span></div>';
+    }).join('')+'</div>';
+  } else if(viewTask==='hanzi'){
+    body='<div class="grid-items">'+HANZI.map(function(h){
+      return '<div class="item" onclick="sayItem(this,\''+h.c+'\',\'zh-CN\')"><div class="glyph">'+h.c+'</div><div class="lbl">'+h.p+'</div></div>';
+    }).join('')+'</div>';
+  } else if(viewTask==='number'){
+    body='<div class="grid-items">'+NUMBERS.map(function(n){
+      return '<div class="item" onclick="sayItem(this,\''+n.n+'\',\'zh-CN\',\''+n.e+'\')"><div class="glyph">'+n.n+'</div><div class="lbl">'+n.p+'</div></div>';
+    }).join('')+'</div>';
+  } else if(viewTask==='word'){
+    body='<div class="grid-items">'+WORDS.map(function(w){
+      return '<div class="item" onclick="sayItem(this,\''+w.w+'\',\'en-US\')"><div class="emo">'+w.e+'</div><div class="lbl">'+w.w+' '+w.z+'</div></div>';
+    }).join('')+'</div>';
+  } else if(viewTask==='workbook'){
+    body='<div class="card" style="text-align:center"><div style="font-size:64px">🧠</div>'+
+      '<h3 style="font-size:16px;margin:10px 0">全脑开发练习册</h3>'+
+      '<p class="hint">陪 CoCo 完成今天的练习册后，点下面的按钮打卡领小红花。</p></div>';
+  }
+  var doneBtn='<button class="login-btn" style="background:'+(t.done?'#4ecb8f':'linear-gradient(135deg,#ffc44d,#ff9f2e)')+'" onclick="finishTask(\''+viewTask+'\')">'+
+    (t.done?'✓ 今天已完成（点我取消）':'🌺 完成啦，领 '+t.star+' 朵小红花')+'</button>';
+  return back+body+'<div style="margin-top:20px">'+doneBtn+'</div>'+
+    '<p class="hint">小提示：点上面的字、数字、单词会发出声音，可以带 CoCo 一起念～</p>';
+}
+
+function starPage(){
+  var list=D.wishes.map(function(w){
+    var can=D.stars>=w.cost;
+    return '<div class="wish"><div class="wi">🎁</div><div class="info"><b>'+esc(w.title)+'</b>'+
+      '<span>需要 '+w.cost+' 🌺 '+(can?'· 可以兑换啦':'· 还差 '+(w.cost-D.stars)+' 朵')+'</span></div>'+
+      '<button class="'+(can?'can':'')+'" '+(can?'':'disabled')+' onclick="redeem(\''+w.id+'\')">'+(role==='parent'?'兑换':'申请')+'</button>'+
+      (role==='parent'?'<button onclick="delWish(\''+w.id+'\')">×</button>':'')+'</div>';
+  }).join('');
+  return '<div class="shop-hero"><div><span>我的小红花</span><b>🌺 '+D.stars+'</b></div><span>攒够小红花<br>换礼物</span></div>'+
+    '<div class="sec"><h2>🎁 礼物商店</h2><small>和爸爸妈妈约定</small></div>'+
+    (list||'<div class="card">还没有礼物，家长可以添加</div>')+
+    (role==='parent'?'<button class="fab" onclick="addWish()">＋ 添加礼物</button>':'');
+}
+
+function parentPage(){
+  if(role!=='parent')return '<div class="card"><h3>这是家长专用页面</h3><p class="hint">请退出后用家长口令进入。</p></div>';
+  var cnt=doneCount();
+  var histKeys=Object.keys(D.history).sort().reverse().slice(0,7);
+  var hist=histKeys.map(function(k){var v=D.history[k];return '<div class="log"><span>'+k+'</span><span>完成 '+v.done+'/'+v.total+' · 🌺'+v.stars+'</span></div>'}).join('');
+  var taskConfig='';
+  taskKeys().forEach(function(k){
+    var t=D.tasks[k];
+    taskConfig+='<div class="log"><span>'+t.icon+' '+t.title+'</span><span>'+t.star+' 🌺/次 '+
+      '<button onclick="editStar(\''+k+'\')" style="border:0;background:none;color:#7b6cff;cursor:pointer;font-size:12px">改</button></span></div>';
+  });
+  return '<div class="sec"><h2>👨‍👩‍👧 家长中心</h2></div>'+
+    '<div class="ov"><div class="box"><b>'+D.totalStars+'</b><span>累计小红花</span></div>'+
+      '<div class="box"><b>'+cnt.done+'/5</b><span>今日完成</span></div>'+
+      '<div class="box"><b>'+D.streak+'</b><span>连续天数</span></div></div>'+
+    '<div class="card"><h3>⚙️ 今日打卡（代 CoCo 操作）</h3>'+taskConfig+'</div>'+
+    '<div class="card"><h3>🔐 口令与名字</h3>'+
+      '<div class="pinfield"><label>宝宝名字</label><div class="pinrow"><input id="newName" value="'+esc(D.name)+'"><button onclick="changeName()">保存</button></div></div>'+
+      '<div class="pinfield"><label>家长口令（当前 '+esc(D.auth.parentPin)+'）</label><div class="pinrow"><input id="newPin" type="text" maxlength="8" placeholder="新口令"><button onclick="changePin()">修改</button></div></div>'+
+      '<p class="hint" style="text-align:left;margin:0">口令留空＝不修改。</p></div>'+
+    '<div class="card"><h3>📅 打卡历史</h3>'+(hist||'<p class="hint">还没有历史记录</p>')+'</div>'+
+    '<div class="card"><h3>📤 数据与汇报</h3>'+
+      '<button class="fab" onclick="openReport()">📱 生成宝宝日报（发微信）</button>'+
+      '<div style="display:flex;gap:8px;margin-top:8px">'+
+        '<button class="fab" onclick="exportData()">⬇ 导出备份</button>'+
+        '<button class="fab" onclick="document.getElementById(\'fileIn\').click()">⬆ 导入数据</button></div>'+
+      '<button class="fab" style="color:#e0607e;border-color:#f5c9d4;background:#fff6f8" onclick="resetAll()">重置全部数据</button></div>'+
+    '<p class="hint">数据保存在本浏览器。换设备或清理前请先导出备份。</p>';
+}
+
+function renderNav(){
+  var items=[['home','🏠','首页'],['star','🌺','小红花'],['parent','👨‍👩‍👧','家长']];
+  document.getElementById('nav').innerHTML=items.map(function(it){
+    var on=(view===it[0]||(it[0]==='home'&&view==='learn'))?'on':'';
+    return '<button class="'+on+'" onclick="navTo(\''+it[0]+'\')"><span class="ni">'+it[1]+'</span>'+it[2]+'</button>';
+  }).join('');
+}
+function navTo(v){if(v==='parent'&&role!=='parent'){toast('请用家长口令进入');return}view=v;render();window.scrollTo(0,0)}
+function goHome(){view='home';render();window.scrollTo(0,0)}
+
+/* ============ 交互 ============ */
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show')},1900)}
+function confetti(){var w=document.createElement('div');w.className='confetti';
+  var em=['🌸','🌺','🌷','🌼','💐','🌈'];var s='';
+  for(var i=0;i<24;i++){s+='<span class="cf" style="left:'+(Math.random()*100)+'%;animation-duration:'+(1.4+Math.random()*1.3)+'s;animation-delay:'+(Math.random()*.3)+'s">'+em[i%em.length]+'</span>'}
+  w.innerHTML=s;document.body.appendChild(w);setTimeout(function(){document.body.removeChild(w)},3000)}
+
+var viewTask='';
+function openTask(k){viewTask=k;view='learn';render();window.scrollTo(0,0)}
+function finishTask(k){
+  var t=D.tasks[k];
+  t.done=!t.done;
+  if(t.done){D.stars+=t.star;D.totalStars+=t.star;D.todayStars+=t.star;confetti();cheer();toast('太棒啦！得到 '+t.star+' 朵小红花 🌺')}
+  else{D.stars=Math.max(0,D.stars-t.star);D.totalStars=Math.max(0,D.totalStars-t.star);D.todayStars=Math.max(0,D.todayStars-t.star);toast('已取消打卡')}
+  save();render();
+}
+function sayItem(el,text,lang,extra){
+  speak(text,lang);
+  el.classList.add('speaking');setTimeout(function(){el.classList.remove('speaking')},900);
+  if(extra)setTimeout(function(){speak(extra,'en-US')},950);
+}
+function playSong(n){speak(n,'en-US');toast('🎵 '+n)}
+
+function checkin(){
+  if(D.checkinDays.indexOf(todayStr)>=0)return;
+  var y=new Date();y.setDate(y.getDate()-1);
+  var yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0');
+  D.streak=(D.lastCheckin===yk)?D.streak+1:1;
+  D.lastCheckin=todayStr;D.checkinDays.push(todayStr);
+  D.stars+=1;D.totalStars+=1;D.todayStars+=1;
+  save();render();confetti();toast('打卡成功！+1 🌺 连续 '+D.streak+' 天');
+}
+
+function redeem(id){
+  var w=D.wishes.filter(function(x){return x.id===id})[0];if(!w)return;
+  if(D.stars<w.cost){toast('小红花还不够哦');return}
+  if(role!=='parent'){toast('已申请「'+w.title+'」，告诉爸爸妈妈吧');return}
+  if(!confirm('确认用 '+w.cost+' 朵小红花兑换「'+w.title+'」吗？'))return;
+  D.stars-=w.cost;save();render();toast('兑换成功！记得兑现礼物 🎁');
+}
+function addWish(){
+  var t=prompt('礼物名称：');if(!t)return;
+  var c=parseInt(prompt('需要多少朵小红花？','10'),10)||10;
+  D.wishes.push({id:'w'+Date.now(),title:t.trim(),cost:c});save();render();toast('礼物已添加');
+}
+function delWish(id){D.wishes=D.wishes.filter(function(w){return w.id!==id});save();render()}
+function editStar(k){
+  var t=D.tasks[k];
+  var v=parseInt(prompt('「'+t.title+'」每次得几朵小红花？',t.star),10);
+  if(v&&v>0){t.star=v;save();render();toast('已改为 '+v+' 朵')}
+}
+function changeName(){var v=(document.getElementById('newName').value||'').trim();if(v){D.name=v;save();render();toast('名字已保存')}}
+function changePin(){
+  var v=(document.getElementById('newPin').value||'').trim();
+  if(!v){toast('留空表示不修改');return}
+  if(v.length<4){toast('口令至少 4 位');return}
+  D.auth.parentPin=v;save();render();toast('家长口令已修改');
+}
+
+/* 登录 */
+function enterBaby(){role='baby';try{sessionStorage.setItem(ROLE_KEY,role)}catch(e){}view='home';render();}
+function enterParent(){
+  var v=(document.getElementById('pinIn').value||'').trim();
+  if(v!==D.auth.parentPin){document.getElementById('loginErr').textContent='口令不正确';return}
+  role='parent';try{sessionStorage.setItem(ROLE_KEY,role)}catch(e){}view='home';render();toast('已进入家长模式');
+}
+function doLogout(){
+  if(!confirm('退出登录？'))return;
+  role='';try{sessionStorage.removeItem(ROLE_KEY)}catch(e){}view='home';render();
+}
+
+/* 日报 */
+function addJournal(){
+  var inp=document.getElementById('journalInput');
+  var v=(inp&&inp.value||'').trim();
+  if(!v){toast('请输入学习内容');return}
+  if(!D.journals[todayStr])D.journals[todayStr]=[];
+  var d=new Date();
+  var tm=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  D.journals[todayStr].push({id:'j'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:v,time:tm});
+  save();render();toast('已记录啦 📝');
+  var ni=document.getElementById('journalInput');if(ni)ni.value='';
+}
+function delJournal(id){
+  if(!D.journals[todayStr])return;
+  D.journals[todayStr]=D.journals[todayStr].filter(function(j){return j.id!==id});
+  save();render();toast('已删除记录');
+}
+
+function reportData(){
+  var cnt=doneCount();
+  var d=new Date();var wk=['日','一','二','三','四','五','六'][d.getDay()];
+  var doneList=taskKeys().filter(function(k){return D.tasks[k].done}).map(function(k){return D.tasks[k].title});
+  var notes=(D.journals[todayStr]||[]).map(function(j){return j.text});
+  var msg=cnt.done===5?'今天五项任务全部完成，太棒啦！':cnt.done>=3?'今天表现很棒，继续加油！':cnt.done>0?'完成了几项任务，明天再来！':'今天还没开始，明天一起加油！';
+  return{name:D.name,date:(d.getMonth()+1)+'月'+d.getDate()+'日 星期'+wk,streak:D.streak,stars:D.todayStars,total:D.totalStars,done:cnt.done,doneList:doneList,notes:notes,msg:msg};
+}
+function reportText(r){
+  var L=['🐣 '+r.name+'的学习日报',r.date+'　连续打卡 '+r.streak+' 天','',
+    '✅ 今日完成 '+r.done+'/5 项','🌺 今日获得 '+r.stars+' 朵小红花（累计 '+r.total+' 朵）',''];
+  if(r.doneList.length){L.push('完成的项目：');r.doneList.forEach(function(t){L.push('  ✓ '+t)})}
+  else L.push('今天还没有完成任务');
+  if(r.notes&&r.notes.length){L.push('','📝 学到的内容：');r.notes.forEach(function(t){L.push('  · '+t)})}
+  L.push('','💬 '+r.msg,'—— 来自宝宝学习工作台');
+  return L.join('\n');
+}
+function reportCanvas(r){
+  var W=750,H=1040,c=document.createElement('canvas');c.width=W;c.height=H;
+  var g=c.getContext('2d');
+  var bg=g.createLinearGradient(0,0,W,H);bg.addColorStop(0,'#fff6e8');bg.addColorStop(.5,'#ffeff5');bg.addColorStop(1,'#eef6ff');
+  g.fillStyle=bg;g.fillRect(0,0,W,H);
+  function rr(x,y,w,h,rad){g.beginPath();g.moveTo(x+rad,y);g.arcTo(x+w,y,x+w,y+h,rad);g.arcTo(x+w,y+h,x,y+h,rad);g.arcTo(x,y+h,x,y,rad);g.arcTo(x,y,x+w,y,rad);g.closePath()}
+  g.fillStyle='#fff';rr(40,40,W-80,H-80,36);g.fill();
+  var head=g.createLinearGradient(64,64,W-64,250);head.addColorStop(0,'#ffb26b');head.addColorStop(1,'#ff85a8');
+  g.fillStyle=head;rr(64,64,W-128,190,28);g.fill();
+  g.fillStyle='#fff';g.textAlign='left';g.font='bold 42px sans-serif';g.fillText(r.name+'的学习日报',96,160);
+  g.font='22px sans-serif';g.fillStyle='rgba(255,255,255,.92)';g.fillText(r.date,96,206);
+  var stats=[['完成项目',r.done+'/5','#7b6cff'],['今日小红花','+'+r.stars,'#ff9f2e'],['连续打卡',r.streak+'天','#ff7aa8']];
+  var sw=(W-128-32)/3;
+  stats.forEach(function(s,i){var x=64+i*(sw+16);g.fillStyle='#faf8ff';rr(x,286,sw,120,20);g.fill();g.textAlign='center';
+    g.fillStyle=s[2];g.font='bold 38px sans-serif';g.fillText(s[1],x+sw/2,344);g.fillStyle='#9a94ac';g.font='21px sans-serif';g.fillText(s[0],x+sw/2,382)});
+  g.textAlign='left';g.fillStyle='#3a3450';g.font='bold 28px sans-serif';g.fillText('今日完成',64,470);
+  var rows=r.doneList.length?r.doneList:['今天还没有完成任务'];
+  rows.slice(0,5).forEach(function(t,i){var y=512+i*46;g.fillStyle='#4ecb8f';g.beginPath();g.arc(80,y-9,15,0,Math.PI*2);g.fill();
+    g.fillStyle='#fff';g.font='bold 18px sans-serif';g.textAlign='center';g.fillText('✓',80,y-3);
+    g.textAlign='left';g.fillStyle='#3a3450';g.font='24px sans-serif';g.fillText(t,110,y)});
+  var noteY=512+Math.max(rows.length,1)*46+18;
+  if(r.notes&&r.notes.length){
+    g.textAlign='left';g.fillStyle='#3a3450';g.font='bold 28px sans-serif';g.fillText('📝 学到的内容',64,noteY);
+    r.notes.slice(0,4).forEach(function(t,i){var y=noteY+42+i*40;
+      g.fillStyle='#ffb02e';g.beginPath();g.arc(80,y-9,8,0,Math.PI*2);g.fill();
+      g.fillStyle='#3a3450';g.font='23px sans-serif';g.fillText(t.length>22?t.slice(0,22)+'…':t,100,y)});
+  }
+  g.fillStyle='#fff6e8';rr(64,H-160,W-128,96,20);g.fill();
+  g.fillStyle='#d9821f';g.font='bold 25px sans-serif';g.textAlign='center';g.fillText('💬 '+r.msg,W/2,H-104);
+  g.fillStyle='#b0a9bd';g.font='18px sans-serif';g.fillText('来自宝宝学习工作台',W/2,H-78);
+  return c.toDataURL('image/png');
+}
+function openReport(){
+  var r=reportData();window._rimg=reportCanvas(r);window._rtxt=reportText(r);
+  var m=document.getElementById('reportModal2')||document.createElement('div');
+  m.id='reportModal2';
+  m.innerHTML='<div class="modal-mask" onclick="if(event.target===this)closeReport()"><div class="modal">'+
+    '<div class="modal-head"><h2>📱 宝宝日报</h2><button class="x" onclick="closeReport()">×</button></div>'+
+    '<div style="text-align:center;background:#faf9ff;border-radius:14px;padding:12px;border:1px solid #f0eef8">'+
+      '<img src="'+window._rimg+'" style="width:100%;border-radius:12px;display:block"><p class="hint">长按图片保存，发微信给家人</p></div>'+
+    '<div class="modal-actions"><button class="btn-send" onclick="copyReport()">📋 复制文字发微信</button>'+
+      '<button class="btn-save" onclick="saveReport()">💾 保存图片</button></div>'+
+  '</div></div>';
+  if(!m.parentNode)document.body.appendChild(m);else m.style.display='';
+}
+function closeReport(){var m=document.getElementById('reportModal2');if(m)m.innerHTML=''}
+function copyReport(){
+  var txt=window._rtxt||'';
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(function(){toast('已复制，去微信粘贴')},function(){fbCopy(txt)});
+  else fbCopy(txt);
+}
+function fbCopy(txt){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');toast('已复制，去微信粘贴')}catch(e){toast('请手动复制')}document.body.removeChild(ta)}
+function saveReport(){try{var a=document.createElement('a');a.href=window._rimg;a.download='宝宝日报_'+todayStr+'.png';document.body.appendChild(a);a.click();document.body.removeChild(a);toast('图片已保存')}catch(e){toast('请长按图片保存')}}
+
+function exportData(){
+  var blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='宝宝工作台备份_'+todayStr+'.json';a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href)},1000);toast('备份已下载');
+}
+document.getElementById('fileIn').addEventListener('change',function(e){
+  var f=e.target.files[0];if(!f)return;var r=new FileReader();
+  r.onload=function(){try{var o=JSON.parse(r.result);if(!o.tasks||!o.wishes)throw 0;
+    if(!confirm('导入将覆盖当前数据，确定吗？'))return;
+    D=o;D.lastOpen=todayStr;rollover();save();render();toast('导入成功')}catch(err){toast('文件格式不正确')}};
+  r.readAsText(f);e.target.value='';
+});
+function resetAll(){
+  if(!confirm('⚠️ 清空所有数据恢复初始状态？不可恢复，建议先导出备份。'))return;
+  if(!confirm('再次确认要重置吗？'))return;
+  D=defaultData();save();render();toast('已重置');
+}
+
+/* ============ 启动 ============ */
+load();render();
+</script>
+</body>
+</html>
