@@ -572,8 +572,8 @@ function openSongVideo(el,i){
   mask.className='video-mask';mask.id='songVideoMask';
   mask.innerHTML='<div class="video-box">'+
     '<div class="video-bar"><b>📺 '+esc(s.n)+'</b><button onclick="closeSongVideo()">✕ 关闭</button></div>'+
-    '<div class="video-frame"><video id="songVideoEl" src="'+esc(s.video)+'" controls autoplay playsinline webkit-playsinline preload="auto" style="position:absolute;top:0;left:0;width:100%;height:100%;background:#000"></video></div>'+
-    '<div class="video-foot"><span>视频直接播放，无需联网。若无法播放，可点下方用本地音频。</span>'+
+    '<div class="video-frame"><video id="songVideoEl" src="'+esc(s.video)+'" controls autoplay loop playsinline webkit-playsinline preload="auto" style="position:absolute;top:0;left:0;width:100%;height:100%;background:#000"></video></div>'+
+    '<div class="video-foot"><span>视频会自动循环播放，无需联网。若无法播放，可点下方用本地音频。</span>'+
     '<button onclick="closeSongVideo(false);playLocalAudio('+i+')">🎵 改用本地音频</button></div>'+
     '</div>';
   mask.addEventListener('click',function(e){if(e.target===mask)closeSongVideo()});
