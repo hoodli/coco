@@ -102,8 +102,8 @@
   .song-tools button{border:0;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:800;color:var(--accent);background:#f4f1ff;cursor:pointer;white-space:nowrap}
   .song .lyric{border:0;background:#fff1f5;color:#ff7aa8;border-radius:12px;padding:8px 10px;font-size:16px;cursor:pointer}
   .song .video-tag{font-size:10px;color:#fff;background:#fb7299;border-radius:8px;padding:2px 6px;margin-left:6px;font-weight:800}
-  .video-mask{position:fixed;inset:0;background:rgba(30,24,50,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:14px}
-  .video-box{background:#fff;border-radius:20px;width:100%;max-width:720px;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.35)}
+  .song-wrap{position:relative}
+  .inline-video{margin-top:10px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
   .video-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;background:#f4f1ff}
   .video-bar b{font-size:14px;color:var(--ink)}
   .video-bar button{border:0;border-radius:10px;padding:7px 14px;font-size:13px;font-weight:800;color:#fff;background:var(--accent);cursor:pointer;white-space:nowrap}
@@ -317,7 +317,7 @@ function loginHTML(){
 }
 
 function render(){
-  var vm=document.getElementById('songVideoMask');
+  var vm=document.getElementById('songVideoBox');
   if(vm&&vm.parentNode)vm.parentNode.removeChild(vm);
   if(!role){app.innerHTML=loginHTML();document.getElementById('nav').style.display='none';return}
   document.getElementById('nav').style.display='';
@@ -402,10 +402,11 @@ function learnPage(){
     body='<div class="song-tools"><span>点一下看视频，再点一次关闭；🔊 可听英文歌词</span>'+
       '<button onclick="stopAllSongs()">⏹ 停止</button></div>'+
       '<div class="songs">'+SONGS.map(function(s,i){
-        return '<div class="song" onclick="playSong(this,'+i+')">'+(s.icon?'<span class="sn"><img class="song-icon" src="'+esc(s.icon)+'" alt=""></span>':'<span class="sn">'+s.e+'</span>')+
-          '<div class="si"><b>'+esc(s.n)+(s.video?'<span class="video-tag">视频</span>':'')+'</b><span>'+(s.video?'点一下看视频':'点一下听演唱')+'</span></div>'+
+        var row='<div class="song" onclick="playSong(this,'+i+')">'+(s.icon?'<span class="sn"><img class="song-icon" src="'+esc(s.icon)+'" alt=""></span>':'<span class="sn">'+s.e+'</span>')+
+          '<div class="si"><b>'+esc(s.n)+(s.video?'<span class="video-tag">视频</span>':'')+'</b><span>'+(s.video?'点一下展开视频':'点一下听演唱')+'</span></div>'+
           '<button class="lyric" title="听英文歌词" onclick="event.stopPropagation();speak(LYRICS['+i+'],\'en-US\')">🔊</button>'+
           '<span class="play">'+(s.video?'📺':'▶️')+'</span></div>';
+        return '<div class="song-wrap" id="songWrap'+i+'">'+row+'</div>';
       }).join('')+'</div>';
   } else if(viewTask==='hanzi'){
     body='<div class="grid-items">'+HANZI.map(function(h){
@@ -564,28 +565,27 @@ function playMelody(i,m){
   });
   songTimer=setTimeout(stopSong,(beat+0.4)*1000);
 }
-/* 本地视频播放：第一首歌用仓库内的 mp4 直接播放，不依赖第三方嵌入 */
+/* 本地视频播放：在歌曲行下方内嵌展开，不弹窗 */
 function openSongVideo(el,i){
   var s=SONGS[i];if(!s||!s.video)return false;
   closeSongVideo(false);
   markSong(el,i);
-  var mask=document.createElement('div');
-  mask.className='video-mask';mask.id='songVideoMask';
-  mask.innerHTML='<div class="video-box">'+
-    '<div class="video-bar"><b>📺 '+esc(s.n)+'</b><button onclick="closeSongVideo()">✕ 关闭</button></div>'+
+  var wrap=document.getElementById('songWrap'+i);
+  if(!wrap)return false;
+  var box=document.createElement('div');
+  box.className='inline-video';box.id='songVideoBox';
+  box.innerHTML=
     '<div class="video-frame"><video id="songVideoEl" src="'+esc(s.video)+'" controls autoplay loop playsinline webkit-playsinline preload="auto" style="position:absolute;top:0;left:0;width:100%;height:100%;background:#000"></video></div>'+
-    '<div class="video-foot"><span>视频会自动循环播放，无需联网。若无法播放，可点下方用本地音频。</span>'+
-    '<button onclick="closeSongVideo(false);playLocalAudio('+i+')">🎵 改用本地音频</button></div>'+
-    '</div>';
-  mask.addEventListener('click',function(e){if(e.target===mask)closeSongVideo()});
-  document.body.appendChild(mask);
+    '<div class="video-foot"><span>视频会自动循环播放，无需联网。</span>'+
+    '<button onclick="closeSongVideo(false);playLocalAudio('+i+')">🎵 改用本地音频</button></div>';
+  wrap.appendChild(box);
   var v=document.getElementById('songVideoEl');
   if(v){var p=v.play();if(p&&p.catch)p.catch(function(){})}
   return true;
 }
 function closeSongVideo(showToast){
-  var mask=document.getElementById('songVideoMask');
-  if(mask&&mask.parentNode)mask.parentNode.removeChild(mask);
+  var box=document.getElementById('songVideoBox');
+  if(box&&box.parentNode)box.parentNode.removeChild(box);
   var list=document.querySelectorAll?document.querySelectorAll('.song'):[];
   for(var j=0;j<list.length;j++)list[j].classList.remove('playing');
   songPlaying=-1;
