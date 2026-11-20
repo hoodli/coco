@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>宝宝学习工作台</title>
+<title>CoCo学习工作台</title>
 <style>
   :root{
     --card:#fff; --ink:#3a3450; --muted:#9a94ac; --line:#f0eef8;
@@ -100,6 +100,17 @@
   .song-tools span{font-size:12px;color:var(--muted);line-height:1.5}
   .song-tools button{border:0;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:800;color:var(--accent);background:#f4f1ff;cursor:pointer;white-space:nowrap}
   .song .lyric{border:0;background:#fff1f5;color:#ff7aa8;border-radius:12px;padding:8px 10px;font-size:16px;cursor:pointer}
+  .song .video-tag{font-size:10px;color:#fff;background:#fb7299;border-radius:8px;padding:2px 6px;margin-left:6px;font-weight:800}
+  .video-mask{position:fixed;inset:0;background:rgba(30,24,50,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:14px}
+  .video-box{background:#fff;border-radius:20px;width:100%;max-width:720px;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.35)}
+  .video-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;background:#f4f1ff}
+  .video-bar b{font-size:14px;color:var(--ink)}
+  .video-bar button{border:0;border-radius:10px;padding:7px 14px;font-size:13px;font-weight:800;color:#fff;background:var(--accent);cursor:pointer;white-space:nowrap}
+  .video-frame{position:relative;width:100%;padding-top:56.25%;background:#000}
+  .video-frame iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
+  .video-foot{padding:12px 16px 16px;text-align:center}
+  .video-foot span{font-size:12px;color:var(--muted);line-height:1.6;display:block;margin-bottom:10px}
+  .video-foot button{border:0;border-radius:12px;padding:9px 16px;font-size:12px;font-weight:800;color:var(--accent);background:#f4f1ff;cursor:pointer}
 
   /* 奖励商店 */
   .shop-hero{background:linear-gradient(135deg,#ffc44d,#ff9f2e);color:#fff;border-radius:22px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
@@ -248,20 +259,10 @@ var WORDS=[
   {w:'bird',z:'小鸟',e:'🐦'},{w:'car',z:'汽车',e:'🚗'},{w:'ball',z:'球',e:'⚽'},{w:'milk',z:'牛奶',e:'🥛'}
 ];
 var SONGS=[
-  {n:'Head Shoulders Knees Toes',e:'🎵',src:'audio/headshoulders.m4a'},
-  {n:'Twinkle Twinkle Little Star',e:'🌟',src:'audio/twinkle.mp3'},
-  {n:'Old MacDonald Had a Farm',e:'🐄',src:'audio/oldmac.mp3'},
-  {n:'The Wheels on the Bus',e:'🚌',src:'audio/wheels.mp3'},
-  {n:'If You Are Happy',e:'😊',src:'audio/ifhappy.mp3'},
-  {n:'Baa Baa Black Sheep',e:'🐑',src:'audio/baabaa.mp3'}
+  {n:'Head Shoulders Knees Toes',e:'🎵',src:'audio/headshoulders.m4a',bvid:'BV1ymEJ62Ezx'}
 ];
 var LYRICS=[
-  'Head, shoulders, knees and toes, knees and toes.',
-  'Twinkle, twinkle, little star, how I wonder what you are.',
-  'Old MacDonald had a farm, E I E I O.',
-  'The wheels on the bus go round and round, all through the town.',
-  "If you're happy and you know it, clap your hands.",
-  'Baa, baa, black sheep, have you any wool?'
+  'Head, shoulders, knees and toes, knees and toes.'
 ];
 /* 内置旋律：不依赖网络，点击即用设备扬声器播放 */
 var MELODIES={
@@ -273,44 +274,7 @@ var MELODIES={
     'E4:1 D4:1 C4:1 E4:1 G4:2 '+
     'C5:1 D5:1 C5:1 B4:1 C5:1 A4:2 '+
     'B4:2 B4:1 G4:1 A4:1 B4:1 C5:2 '+
-    'C4:2 C4:1 C4:1'},
-  'Twinkle Twinkle Little Star':{bpm:104,notes:
-    'C4:1 C4:1 G4:1 G4:1 A4:1 A4:1 G4:2 '+
-    'F4:1 F4:1 E4:1 E4:1 D4:1 D4:1 C4:2 '+
-    'G4:1 G4:1 F4:1 F4:1 E4:1 E4:1 D4:2 '+
-    'G4:1 G4:1 F4:1 F4:1 E4:1 E4:1 D4:2 '+
-    'C4:1 C4:1 G4:1 G4:1 A4:1 A4:1 G4:2 '+
-    'F4:1 F4:1 E4:1 E4:1 D4:1 D4:1 C4:2'},
-  'Old MacDonald Had a Farm':{bpm:112,notes:
-    'C4:1 C4:1 C4:1 G4:1 A4:1 A4:1 G4:2 '+
-    'E4:1 E4:1 D4:1 D4:1 C4:2 '+
-    'C4:1 C4:1 C4:1 G4:1 A4:1 A4:1 G4:2 '+
-    'E4:1 E4:1 D4:1 D4:1 C4:2 '+
-    'G4:1 G4:1 E4:1 E4:1 C4:2 '+
-    'G4:1 G4:1 E4:1 E4:1 C4:2 '+
-    'C4:1 C4:1 C4:1 G4:1 A4:1 A4:1 G4:2 '+
-    'E4:1 E4:1 D4:1 D4:1 C4:2'},
-  'The Wheels on the Bus':{bpm:108,notes:
-    'C4:1 C4:1 G4:1 G4:1 A4:1 A4:1 G4:2 '+
-    'F4:1 F4:1 E4:1 E4:1 D4:1 D4:1 C4:2 '+
-    'G4:1 G4:1 F4:1 F4:1 E4:1 E4:1 D4:2 '+
-    'G4:1 G4:1 F4:1 F4:1 E4:1 E4:1 D4:2 '+
-    'C4:1 C4:1 G4:1 G4:1 A4:1 A4:1 G4:2 '+
-    'F4:1 F4:1 E4:1 E4:1 D4:1 D4:1 C4:2'},
-  'If You Are Happy':{bpm:116,notes:
-    'C4:1 C4:1 F4:1 F4:1 F4:1 F4:1 F4:1 F4:1 E4:1 F4:1 G4:2 '+
-    'C4:1 C4:1 G4:1 G4:1 G4:1 G4:1 G4:1 G4:1 F4:1 G4:1 A4:2 '+
-    'F4:1 F4:1 A#4:1 A#4:1 A#4:1 A#4:1 D5:1 D5:1 '+
-    'A#4:1 A#4:1 A4:1 A4:1 A4:1 G4:1 F4:1 F4:2 '+
-    'A4:1 A4:1 G4:1 G4:1 G4:1 F4:1 E4:1 E4:1 '+
-    'D4:1 E4:1 F4:2'},
-  'Baa Baa Black Sheep':{bpm:104,notes:
-    'C4:1 C4:1 G4:1 G4:1 A4:1 A4:1 A4:1 A4:1 G4:2 '+
-    'F4:1 F4:1 E4:1 E4:1 D4:1 D4:1 C4:2 '+
-    'G4:1 G4:1 G4:1 F4:1 F4:1 E4:1 E4:1 E4:1 D4:2 '+
-    'G4:1 G4:1 G4:1 F4:1 F4:1 F4:1 E4:1 E4:1 E4:1 D4:2 '+
-    'C4:1 C4:1 G4:1 G4:1 A4:1 A4:1 A4:1 A4:1 G4:2 '+
-    'F4:1 F4:1 E4:1 E4:1 D4:1 D4:1 C4:2'}
+    'C4:2 C4:1 C4:1'}
 };
 var NOTE_NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 var NOTE_FREQ=(function(){var m={};for(var o=1;o<=7;o++){for(var i=0;i<12;i++){m[NOTE_NAMES[i]+o]=440*Math.pow(2,((o-4)*12+i-9)/12)}}return m})();
@@ -338,7 +302,7 @@ function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&am
 
 function loginHTML(){
   return '<div class="login-wrap"><div class="login-card">'+
-    '<div class="login-logo">🐣</div><h1>宝宝学习工作台</h1>'+
+    '<div class="login-logo">🐣</div><h1>CoCo学习工作台</h1>'+
     '<p class="desc">每天玩一玩，聪明又快乐</p>'+
     '<button class="login-btn" onclick="enterBaby()">👶 宝宝进入</button>'+
     '<div style="margin-top:22px;padding-top:18px;border-top:1px solid #f0eef8">'+
@@ -352,6 +316,8 @@ function loginHTML(){
 }
 
 function render(){
+  var vm=document.getElementById('songVideoMask');
+  if(vm&&vm.parentNode)vm.parentNode.removeChild(vm);
   if(!role){app.innerHTML=loginHTML();document.getElementById('nav').style.display='none';return}
   document.getElementById('nav').style.display='';
   var html='';
@@ -363,12 +329,18 @@ function render(){
   renderNav();
 }
 
+/* 东八区(UTC+8)时间：对时间戳做 +8h 偏移后用 UTC getter 读取，结果不受设备本地时区影响 */
+function bjNow(){return new Date(Date.now()+8*3600*1000)}
+function bjGreeting(){
+  var h=bjNow().getUTCHours();
+  return h<6?'夜深了':h<11?'早上好':h<13?'中午好':h<18?'下午好':'晚上好';
+}
 function heroHTML(){
-  var d=new Date();var wk=['日','一','二','三','四','五','六'][d.getDay()];
+  var d=bjNow();var wk=['日','一','二','三','四','五','六'][d.getUTCDay()];
   return '<div class="hero">'+
     '<button class="quit" onclick="doLogout()">🚪 退出</button>'+
     '<div class="hero-top"><div class="baby-avatar">'+D.avatar+'</div>'+
-      '<div class="hero-info"><h1>'+esc(D.name)+'，早上好！</h1><p>'+(d.getMonth()+1)+'月'+d.getDate()+'日 · 星期'+wk+'</p></div></div>'+
+      '<div class="hero-info"><h1>'+esc(D.name)+'，'+bjGreeting()+'！</h1><p>'+(d.getUTCMonth()+1)+'月'+d.getUTCDate()+'日 · 星期'+wk+'</p></div></div>'+
     '<div class="hero-stats">'+
       '<div class="hs"><b>🌺'+D.stars+'</b><span>小红花</span></div>'+
       '<div class="hs"><b>🔥'+D.streak+'</b><span>连续打卡</span></div>'+
@@ -426,13 +398,13 @@ function learnPage(){
   var back='<div class="learn-head"><button class="back" onclick="goHome()">← 返回</button><h2>'+t.icon+' '+t.title+'</h2></div>';
   var body='';
   if(viewTask==='song'){
-    body='<div class="song-tools"><span>点一下听演唱，再点一次停止；🔊 可听英文歌词</span>'+
-      '<button onclick="stopSong()">⏹ 停止</button></div>'+
+    body='<div class="song-tools"><span>点一下看视频，再点一次关闭；🔊 可听英文歌词</span>'+
+      '<button onclick="stopAllSongs()">⏹ 停止</button></div>'+
       '<div class="songs">'+SONGS.map(function(s,i){
         return '<div class="song" onclick="playSong(this,'+i+')"><span class="sn">'+s.e+'</span>'+
-          '<div class="si"><b>'+esc(s.n)+'</b><span>点一下听演唱</span></div>'+
+          '<div class="si"><b>'+esc(s.n)+(s.bvid?'<span class="video-tag">在线视频</span>':'')+'</b><span>'+(s.bvid?'点一下看视频':'点一下听演唱')+'</span></div>'+
           '<button class="lyric" title="听英文歌词" onclick="event.stopPropagation();speak(LYRICS['+i+'],\'en-US\')">🔊</button>'+
-          '<span class="play">▶️</span></div>';
+          '<span class="play">'+(s.bvid?'📺':'▶️')+'</span></div>';
       }).join('')+'</div>';
   } else if(viewTask==='hanzi'){
     body='<div class="grid-items">'+HANZI.map(function(h){
@@ -499,7 +471,7 @@ function parentPage(){
         '<button class="fab" onclick="document.getElementById(\'fileIn\').click()">⬆ 导入数据</button></div>'+
       '<button class="fab" style="color:#e0607e;border-color:#f5c9d4;background:#fff6f8" onclick="resetAll()">重置全部数据</button></div>'+
     '<p class="hint">数据保存在本浏览器。换设备或清理前请先导出备份。</p>'+
-    '<p class="hint">儿歌音频来源：Head Shoulders 来自 Mother Goose Club（SoundCloud，版权 all-rights-reserved，仅个人家庭学习使用）；If You Are Happy © Nargo、Twinkle / Baa Baa © Bobby Cole（CC BY-NC-ND 3.0）；Old MacDonald 为 1926 年公共领域录音；Wheels on the Bus 为公共领域。</p>';
+    '<p class="hint">儿歌来源：Head Shoulders Knees And Toes 由 Noodle & Pals 演绎，视频来自 B 站（UP 主 LakeTiantian），仅个人家庭学习使用。</p>';
 }
 
 function renderNav(){
@@ -591,10 +563,62 @@ function playMelody(i,m){
   });
   songTimer=setTimeout(stopSong,(beat+0.4)*1000);
 }
+/* B站在线视频：第一首歌用官方 iframe 播放器在线播放 */
+function openSongVideo(el,i){
+  var s=SONGS[i];if(!s||!s.bvid)return false;
+  closeSongVideo(false);
+  markSong(el,i);
+  var mask=document.createElement('div');
+  mask.className='video-mask';mask.id='songVideoMask';
+  mask.innerHTML='<div class="video-box">'+
+    '<div class="video-bar"><b>📺 '+esc(s.n)+'</b><button onclick="closeSongVideo()">✕ 关闭</button></div>'+
+    '<div class="video-frame"><iframe src="https://player.bilibili.com/player.html?bvid='+encodeURIComponent(s.bvid)+'&page=1&high_quality=1&danmaku=0" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; fullscreen; picture-in-picture"></iframe></div>'+
+    '<div class="video-foot"><span>视频来自 B 站，需要联网。若加载不出来，可点下方用本地音频播放。</span>'+
+    '<button onclick="closeSongVideo(false);playLocalAudio('+i+')">🎵 改用本地音频</button></div>'+
+    '</div>';
+  mask.addEventListener('click',function(e){if(e.target===mask)closeSongVideo()});
+  document.body.appendChild(mask);
+  toast('📺 正在打开在线视频：'+s.n);
+  return true;
+}
+function closeSongVideo(showToast){
+  var mask=document.getElementById('songVideoMask');
+  if(mask&&mask.parentNode)mask.parentNode.removeChild(mask);
+  var list=document.querySelectorAll?document.querySelectorAll('.song'):[];
+  for(var j=0;j<list.length;j++)list[j].classList.remove('playing');
+  songPlaying=-1;
+  if(showToast!==false)toast('已关闭视频');
+}
+function stopAllSongs(){closeSongVideo(false);stopSong();toast('已停止')}
+function playLocalAudio(i){
+  var s=SONGS[i];if(!s)return;
+  var list=document.querySelectorAll?document.querySelectorAll('.song'):[];
+  markSong(list[i],i);
+  audioFallbackDone=false;
+  var m=MELODIES[s.n];
+  if(s.src&&typeof Audio!=='undefined'){
+    var a=getSongAudio();
+    try{
+      a.src=s.src;a.currentTime=0;
+      var p=a.play();
+      if(p&&p.catch)p.catch(function(){
+        if(songPlaying===i&&songOscs.length===0&&!audioFallbackDone){
+          audioFallbackDone=true;
+          if(m)playMelody(i,m);else{speak(s.n,'en-US');toast('播放失败，已改为朗读')}
+        }
+      });
+      toast('🎵 正在演唱：'+s.n);
+      return;
+    }catch(e){}
+  }
+  if(m){playMelody(i,m);toast('🎵 正在播放旋律：'+s.n)}
+  else{speak(s.n,'en-US');toast('此设备暂不支持播放，已改为朗读')}
+}
 function playSong(el,i){
   var s=SONGS[i];if(!s)return;
-  if(songPlaying===i){stopSong();toast('已停止');return}
-  stopSong();
+  if(songPlaying===i){stopAllSongs();return}
+  stopAllSongs();
+  if(s.bvid&&openSongVideo(el,i))return;
   markSong(el,i);
   audioFallbackDone=false;
   var m=MELODIES[s.n];
@@ -696,7 +720,7 @@ function reportText(r){
   if(r.doneList.length){L.push('完成的项目：');r.doneList.forEach(function(t){L.push('  ✓ '+t)})}
   else L.push('今天还没有完成任务');
   if(r.notes&&r.notes.length){L.push('','📝 学到的内容：');r.notes.forEach(function(t){L.push('  · '+t)})}
-  L.push('','💬 '+r.msg,'—— 来自宝宝学习工作台');
+  L.push('','💬 '+r.msg,'—— 来自CoCo学习工作台');
   return L.join('\n');
 }
 function reportCanvas(r){
@@ -728,7 +752,7 @@ function reportCanvas(r){
   }
   g.fillStyle='#fff6e8';rr(64,H-160,W-128,96,20);g.fill();
   g.fillStyle='#d9821f';g.font='bold 25px sans-serif';g.textAlign='center';g.fillText('💬 '+r.msg,W/2,H-104);
-  g.fillStyle='#b0a9bd';g.font='18px sans-serif';g.fillText('来自宝宝学习工作台',W/2,H-78);
+  g.fillStyle='#b0a9bd';g.font='18px sans-serif';g.fillText('来自CoCo学习工作台',W/2,H-78);
   return c.toDataURL('image/png');
 }
 function openReport(){
