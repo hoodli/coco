@@ -248,9 +248,12 @@ var WORDS=[
   {w:'bird',z:'小鸟',e:'🐦'},{w:'car',z:'汽车',e:'🚗'},{w:'ball',z:'球',e:'⚽'},{w:'milk',z:'牛奶',e:'🥛'}
 ];
 var SONGS=[
-  {n:'Head Shoulders Knees Toes',e:'🎵'},{n:'Twinkle Twinkle Little Star',e:'🌟'},
-  {n:'Old MacDonald Had a Farm',e:'🐄'},{n:'The Wheels on the Bus',e:'🚌'},
-  {n:'If You Are Happy',e:'😊'},{n:'Baa Baa Black Sheep',e:'🐑'}
+  {n:'Head Shoulders Knees Toes',e:'🎵',src:'audio/headshoulders.mp3'},
+  {n:'Twinkle Twinkle Little Star',e:'🌟',src:'audio/twinkle.mp3'},
+  {n:'Old MacDonald Had a Farm',e:'🐄',src:'audio/oldmac.mp3'},
+  {n:'The Wheels on the Bus',e:'🚌',src:'audio/wheels.mp3'},
+  {n:'If You Are Happy',e:'😊',src:'audio/ifhappy.mp3'},
+  {n:'Baa Baa Black Sheep',e:'🐑',src:'audio/baabaa.mp3'}
 ];
 var LYRICS=[
   'Head, shoulders, knees and toes, knees and toes.',
@@ -423,11 +426,11 @@ function learnPage(){
   var back='<div class="learn-head"><button class="back" onclick="goHome()">← 返回</button><h2>'+t.icon+' '+t.title+'</h2></div>';
   var body='';
   if(viewTask==='song'){
-    body='<div class="song-tools"><span>点一下播放旋律，再点一次停止；🔊 可听英文歌词</span>'+
+    body='<div class="song-tools"><span>点一下听真人演唱，再点一次停止；🔊 可听英文歌词</span>'+
       '<button onclick="stopSong()">⏹ 停止</button></div>'+
       '<div class="songs">'+SONGS.map(function(s,i){
         return '<div class="song" onclick="playSong(this,'+i+')"><span class="sn">'+s.e+'</span>'+
-          '<div class="si"><b>'+esc(s.n)+'</b><span>点一下播放旋律</span></div>'+
+          '<div class="si"><b>'+esc(s.n)+'</b><span>点一下听演唱</span></div>'+
           '<button class="lyric" title="听英文歌词" onclick="event.stopPropagation();speak(LYRICS['+i+'],\'en-US\')">🔊</button>'+
           '<span class="play">▶️</span></div>';
       }).join('')+'</div>';
@@ -495,7 +498,8 @@ function parentPage(){
         '<button class="fab" onclick="exportData()">⬇ 导出备份</button>'+
         '<button class="fab" onclick="document.getElementById(\'fileIn\').click()">⬆ 导入数据</button></div>'+
       '<button class="fab" style="color:#e0607e;border-color:#f5c9d4;background:#fff6f8" onclick="resetAll()">重置全部数据</button></div>'+
-    '<p class="hint">数据保存在本浏览器。换设备或清理前请先导出备份。</p>';
+    '<p class="hint">数据保存在本浏览器。换设备或清理前请先导出备份。</p>'+
+    '<p class="hint">儿歌音频来自公共领域及 CC 授权：Head Shoulders © Derek Piotr、Lucy Warnock、Elizabeth Wolff（CC BY-NC-SA 4.0）；If You Are Happy © Nargo、Twinkle / Baa Baa © Bobby Cole（CC BY-NC-ND 3.0）。仅供家庭非商业学习使用。</p>';
 }
 
 function renderNav(){
@@ -530,6 +534,7 @@ function sayItem(el,text,lang,extra){
   if(extra)setTimeout(function(){speak(extra,'en-US')},950);
 }
 var audioCtx=null,songOscs=[],songTimer=null,songPlaying=-1;
+var songAudio=null,audioFallbackDone=false;
 function getAudioCtx(){
   var AC=window.AudioContext||window.webkitAudioContext;
   if(!AC)return null;
@@ -537,21 +542,37 @@ function getAudioCtx(){
   if(audioCtx.state==='suspended')audioCtx.resume();
   return audioCtx;
 }
+function getSongAudio(){
+  if(!songAudio){
+    songAudio=new Audio();
+    songAudio.preload='none';
+    songAudio.addEventListener('ended',function(){stopSong()});
+    songAudio.addEventListener('error',function(){
+      if(songPlaying>=0&&songOscs.length===0&&!audioFallbackDone){
+        var i=songPlaying,m=MELODIES[SONGS[i].n];
+        if(m){audioFallbackDone=true;playMelody(i,m)}
+      }
+    });
+  }
+  return songAudio;
+}
+function markSong(el,i){
+  songPlaying=i;
+  var list=document.querySelectorAll?document.querySelectorAll('.song'):[];
+  for(var j=0;j<list.length;j++)list[j].classList.remove('playing');
+  if(el&&el.classList)el.classList.add('playing');
+}
 function stopSong(){
+  if(songAudio){try{songAudio.pause();songAudio.currentTime=0}catch(e){}}
   songOscs.forEach(function(o){try{o.stop()}catch(e){}});songOscs=[];
   if(songTimer){clearTimeout(songTimer);songTimer=null}
-  songPlaying=-1;
+  songPlaying=-1;audioFallbackDone=false;
   var list=document.querySelectorAll?document.querySelectorAll('.song'):[];
   for(var i=0;i<list.length;i++)list[i].classList.remove('playing');
 }
-function playSong(el,i){
-  var s=SONGS[i];if(!s)return;
-  if(songPlaying===i){stopSong();toast('已停止');return}
-  stopSong();
-  var m=MELODIES[s.n],ctx=getAudioCtx();
-  if(!m||!ctx){speak(s.n,'en-US');toast('此设备暂不支持播放，已改为朗读');return}
-  songPlaying=i;
-  if(el&&el.classList)el.classList.add('playing');
+function playMelody(i,m){
+  var ctx=getAudioCtx();
+  if(!ctx||!m)return;
   var spb=60/(m.bpm||100),t0=ctx.currentTime+0.06,beat=0;
   m.notes.split(/\s+/).forEach(function(item){
     if(!item)return;
@@ -569,7 +590,31 @@ function playSong(el,i){
     beat+=dur;
   });
   songTimer=setTimeout(stopSong,(beat+0.4)*1000);
-  toast('🎵 正在播放：'+s.n);
+}
+function playSong(el,i){
+  var s=SONGS[i];if(!s)return;
+  if(songPlaying===i){stopSong();toast('已停止');return}
+  stopSong();
+  markSong(el,i);
+  audioFallbackDone=false;
+  var m=MELODIES[s.n];
+  if(s.src&&typeof Audio!=='undefined'){
+    var a=getSongAudio();
+    try{
+      a.src=s.src;a.currentTime=0;
+      var p=a.play();
+      if(p&&p.catch)p.catch(function(){
+        if(songPlaying===i&&songOscs.length===0&&!audioFallbackDone){
+          audioFallbackDone=true;
+          if(m)playMelody(i,m);else{speak(s.n,'en-US');toast('播放失败，已改为朗读')}
+        }
+      });
+      toast('🎵 正在演唱：'+s.n);
+      return;
+    }catch(e){}
+  }
+  if(m){playMelody(i,m);toast('🎵 正在播放旋律：'+s.n)}
+  else{speak(s.n,'en-US');toast('此设备暂不支持播放，已改为朗读')}
 }
 
 function checkin(){
