@@ -91,6 +91,7 @@
   .songs{display:flex;flex-direction:column;gap:10px}
   .song{background:#fff;border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);cursor:pointer}
   .song .sn{font-size:30px}
+  .song .song-icon{width:48px;height:48px;border-radius:12px;object-fit:cover;display:block;background:#ffe6ef}
   .song .si{flex:1}
   .song .si b{font-size:14px;display:block}
   .song .si span{font-size:11px;color:var(--muted)}
@@ -259,7 +260,7 @@ var WORDS=[
   {w:'bird',z:'小鸟',e:'🐦'},{w:'car',z:'汽车',e:'🚗'},{w:'ball',z:'球',e:'⚽'},{w:'milk',z:'牛奶',e:'🥛'}
 ];
 var SONGS=[
-  {n:'Head Shoulders Knees Toes',e:'🎵',src:'audio/headshoulders.m4a',video:'video/headshoulders.mp4'}
+  {n:'Head Shoulders Knees Toes',e:'🎵',icon:'img/noodle-icon.png',src:'audio/headshoulders.m4a',video:'video/headshoulders.mp4'}
 ];
 var LYRICS=[
   'Head, shoulders, knees and toes, knees and toes.'
@@ -401,7 +402,7 @@ function learnPage(){
     body='<div class="song-tools"><span>点一下看视频，再点一次关闭；🔊 可听英文歌词</span>'+
       '<button onclick="stopAllSongs()">⏹ 停止</button></div>'+
       '<div class="songs">'+SONGS.map(function(s,i){
-        return '<div class="song" onclick="playSong(this,'+i+')"><span class="sn">'+s.e+'</span>'+
+        return '<div class="song" onclick="playSong(this,'+i+')">'+(s.icon?'<span class="sn"><img class="song-icon" src="'+esc(s.icon)+'" alt=""></span>':'<span class="sn">'+s.e+'</span>')+
           '<div class="si"><b>'+esc(s.n)+(s.video?'<span class="video-tag">视频</span>':'')+'</b><span>'+(s.video?'点一下看视频':'点一下听演唱')+'</span></div>'+
           '<button class="lyric" title="听英文歌词" onclick="event.stopPropagation();speak(LYRICS['+i+'],\'en-US\')">🔊</button>'+
           '<span class="play">'+(s.video?'📺':'▶️')+'</span></div>';
